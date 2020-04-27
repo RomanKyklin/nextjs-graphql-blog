@@ -2,7 +2,6 @@ import React, {useEffect, useState} from "react";
 import Layout from "../layouts/layout";
 import Link from "next/link";
 import axios from 'axios';
-import {createPost, updatePost} from "../../queries/posts";
 import Router from "next/router";
 import Alert from "./alert";
 import PropTypes from 'prop-types';
@@ -19,12 +18,31 @@ const PostForm = ({post = null}) => {
 
     const onSubmit = event => {
         event.preventDefault();
+        const createPostQuery = `
+            query {
+              createPost(title:"${title}", text:"${text}") {
+                    id
+                    title
+                    text
+              }
+            }
+        `;
+
+        const updatePostQuery = ` 
+            query {
+              updatePost(id: ${post?.id}, title:"${title}", text:"${text}") {
+                    id
+                    title
+                    text
+              }
+            }
+        `;
 
         if (title && text) {
             axios.post(API_URL, {
                 query: post ?
-                    updatePost(post.id, title, text) :
-                    createPost(title, text)
+                    updatePostQuery :
+                    createPostQuery
             })
                 .then(() => setIsSubmitted(true))
                 .catch(err => setError(err))

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import axios from "axios";
-import {deletePost} from "../../queries/posts";
 import {useEffect, useState} from "react";
 import Alert from "./alert";
 import Router from "next/router";
@@ -14,9 +13,18 @@ const {
 const Post = ({post}) => {
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [error, setError] = useState(null);
+    const query = `
+       query {
+          deletePost(id: ${post.id}) {
+                id
+                title
+                text
+          }
+       }
+    `;
 
     const onDeletePost = () => {
-        axios.post(API_URL, {query: deletePost(post.id)})
+        axios.post(API_URL, {query})
             .then(() => setIsSubmitted(true))
             .catch(setError)
     };

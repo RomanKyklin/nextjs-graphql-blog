@@ -1,8 +1,8 @@
 import React, {useState} from "react";
 import axios from 'axios';
 import Alert from "./alert";
-import {createUser} from "../../queries/posts";
 import getConfig from "next/config";
+
 const {
     publicRuntimeConfig: {API_URL}
 } = getConfig();
@@ -12,10 +12,19 @@ export default function LoginForm() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState(null);
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const query = `
+         query {
+            createUser(login: "${login}", password: "${password}") {
+                    id
+                    login
+                    password
+             }
+        }
+    `;
 
     const onCreateUser = () => {
         if (login && password) {
-            axios.post(API_URL, {query: createUser(login, password)})
+            axios.post(API_URL, {query})
                 .then(() => setIsSubmitted(true))
                 .catch(setError);
         }
