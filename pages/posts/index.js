@@ -33,7 +33,7 @@ function Index() {
 
     return (
         <Layout>
-            {error ? <Alert message='Please refresh the page'/> : <b>Loading ...</b>}
+            {error ? <Alert message={error.message}/> : <b>Loading ...</b>}
         </Layout>
     )
 }

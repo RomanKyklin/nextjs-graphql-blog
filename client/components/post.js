@@ -1,10 +1,10 @@
 import Link from "next/link";
-import React, {useEffect, useState} from "react";
+import React, {useState} from "react";
 import Alert from "./alert";
-import Router from "next/router";
 import PropTypes from 'prop-types';
 import {gql} from "apollo-server-core";
 import {useMutation} from "@apollo/react-hooks";
+import {GET_POSTS} from "../../pages/posts";
 
 export const DELETE_POST = gql`
     mutation deletePost($id:Int) {
@@ -15,19 +15,22 @@ export const DELETE_POST = gql`
 `;
 
 const Post = ({post}) => {
-    const [isSubmitted, setIsSubmitted] = useState(false);
     const [error, setError] = useState(null);
-    const [deletePost, {data}] = useMutation(DELETE_POST);
+    const [deletePost, {data}] = useMutation(
+        DELETE_POST,
+        {
+            update(cache, {data: {deletePost}}) {
+                const {posts} = cache.readQuery({query: GET_POSTS});
+                cache.writeQuery({
+                    query: GET_POSTS,
+                    data: {posts: posts.filter(val => val.id === deletePost.id)},
+                });
+            }
+        }
+    );
 
     const onDeletePost = () => deletePost({variables: {id: post.id}})
-        .then(() => setIsSubmitted(true))
         .catch(setError);
-
-    useEffect(() => {
-        if (isSubmitted) {
-            Router.push('/posts')
-        }
-    }, [isSubmitted]);
 
     return (
         <div className="card">

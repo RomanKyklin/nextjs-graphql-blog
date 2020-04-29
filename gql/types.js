@@ -1,17 +1,19 @@
 import {gql} from "apollo-server-core";
 
 export const typeDefs = gql`
+    directive @isAuthenticated on FIELD_DEFINITION
     type Query {
-        posts: [Post!]!
-        post(id: Int): Post
+        currentUser: User! @isAuthenticated
+        posts: [Post!]! @isAuthenticated
+        post(id: Int): Post @isAuthenticated
         users: [User!]!
-        login(login: String, password: String): User
     }
     type Mutation {
-        createUser(login: String, password: String): User
-        createPost(title: String, text: String): Post
-        deletePost(id: Int): Status
-        updatePost(id: Int, title: String, text: String): Post
+        createUser(login: String, password: String): Token 
+        createPost(title: String, text: String, user_id: Int): Post @isAuthenticated
+        deletePost(id: Int): Status @isAuthenticated
+        updatePost(id: Int, title: String, text: String): Post @isAuthenticated
+        login(login: String, password: String): Token
     }
     type Post {
         id: Int!
@@ -26,5 +28,8 @@ export const typeDefs = gql`
     }
     type Status {
         status: Boolean
+    }
+    type Token {
+        token: String
     }
 `;

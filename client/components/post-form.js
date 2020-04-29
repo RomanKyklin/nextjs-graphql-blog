@@ -5,11 +5,20 @@ import Router from "next/router";
 import Alert from "./alert";
 import PropTypes from 'prop-types';
 import {gql} from "apollo-server-core";
-import {useMutation} from "@apollo/react-hooks";
+import {useMutation, useQuery} from "@apollo/react-hooks";
+import {GET_POSTS} from "../../pages/posts";
+
+export const CURRENT_USER = gql`
+    query currentUser {
+        currentUser {
+            id
+            login
+        }
+    }`;
 
 export const CREATE_POST = gql`
-    mutation createPost($title:String, $text:String) {
-        createPost(title: $title, text: $text) {
+    mutation createPost($title:String, $text:String, $user_id:Int) {
+        createPost(title: $title, text: $text, user_id: $user_id) {
             id
             title
             text
@@ -30,17 +39,29 @@ const PostForm = ({post = null}) => {
     const [text, setText] = useState(post ? post.text : '');
     const [error, setError] = useState(null);
     const [isSubmitted, setIsSubmitted] = useState(false);
-    const [createPost, {createPostData}] = useMutation(CREATE_POST);
+    const [createPost, {createPostData}] = useMutation(
+        CREATE_POST,
+        {
+            update(cache, {data: {createPost}}) {
+                const {posts} = cache.readQuery({query: GET_POSTS});
+                cache.writeQuery({
+                    query: GET_POSTS,
+                    data: {posts: posts.concat([createPost])},
+                });
+            }
+        }
+    );
     const [updatePost, {updatePostData}] = useMutation(UPDATE_POST);
+    const {loading, userError, data} = useQuery(CURRENT_USER);
 
     const onSubmit = async event => {
         event.preventDefault();
-
+        const {id} = data.currentUser;
         if (title && text) {
             try {
                 post ?
                     await updatePost({variables: {id: post.id, title, text}}) :
-                    await createPost({variables: {title, text}});
+                    await createPost({variables: {title, text, user_id: id}});
                 setIsSubmitted(true);
             } catch (e) {
                 console.error(e);
@@ -58,7 +79,7 @@ const PostForm = ({post = null}) => {
     return (
         <Layout>
             {error ? <Alert
-                message='Server sent an error, please refresh the page'
+                message={error.message}
                 type='alert-danger'
                 size='col-md-6'
             /> : null}

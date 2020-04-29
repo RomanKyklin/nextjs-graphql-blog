@@ -6,9 +6,21 @@ import Alert from "./alert";
 import PropTypes from 'prop-types';
 import {DELETE_POST} from "./post";
 import {useMutation} from "@apollo/react-hooks";
+import {GET_POSTS} from "../../pages/posts";
 
 const PostDetails = ({post}) => {
-    const [deletePost, {data}] = useMutation(DELETE_POST);
+    const [deletePost, {data}] = useMutation(
+        DELETE_POST,
+        {
+            update(cache, {data: {deletePost}}) {
+                const {posts} = cache.readQuery({query: GET_POSTS});
+                cache.writeQuery({
+                    query: GET_POSTS,
+                    data: {posts: posts.filter(val => val.id === deletePost.id)},
+                });
+            }
+        }
+    );
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [error, setError] = useState(null);
 

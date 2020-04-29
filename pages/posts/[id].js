@@ -7,7 +7,6 @@ import Layout from "../../client/layouts/layout";
 
 function Post({id}) {
     const {loading, error, data} = useQuery(GET_POST, {variables: {id}});
-    console.log(error);
     if (!loading && !error) {
         const {post} = data;
         return <PostDetails post={post}/>
@@ -15,7 +14,7 @@ function Post({id}) {
 
     return (
         <Layout>
-            {error ? <Alert message='Please refresh the page'/> : <b>Loading ...</b>}
+            {error ? <Alert message={error.message}/> : <b>Loading ...</b>}
         </Layout>
     )
 }
