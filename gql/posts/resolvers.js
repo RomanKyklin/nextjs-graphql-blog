@@ -17,7 +17,6 @@ export const resolvers = {
     Mutation: {
         async createPost(parent, args, {knex}) {
             const {title, text, user_id} = args;
-            console.log(user_id);
             const result = await knex('post').insert({title, text, user_id}).returning('*');
             return result[0];
         },
