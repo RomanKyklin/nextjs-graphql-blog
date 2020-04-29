@@ -1,26 +1,30 @@
-import axios from "axios";
 import PostDetails from "../../client/components/post-details";
 import React from "react";
+import {useQuery} from "@apollo/react-hooks";
+import {GET_POST} from "./edit/[id]";
+import Alert from "../../client/components/alert";
+import Layout from "../../client/layouts/layout";
 
-function Post({post}) {
-    return <PostDetails post={post}/>
+function Post({id}) {
+    const {loading, error, data} = useQuery(GET_POST, {variables: {id}});
+    console.log(error);
+    if (!loading && !error) {
+        const {post} = data;
+        return <PostDetails post={post}/>
+    }
+
+    return (
+        <Layout>
+            {error ? <Alert message='Please refresh the page'/> : <b>Loading ...</b>}
+        </Layout>
+    )
 }
 
 export async function getServerSideProps({params}) {
-    const query = `
-        query {
-          post(id: ${params.id}) {
-                id
-                title
-                text
-          }
-        }
-    `;
-    const res = await axios.post(process.env.API_URL, {query});
-    const {post} = res.data.data;
+    const {id} = params;
     return {
         props: {
-            post
+            id: parseInt(id)
         }
     };
 }

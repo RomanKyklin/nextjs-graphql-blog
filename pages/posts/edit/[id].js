@@ -1,26 +1,40 @@
-import axios from "axios";
 import PostForm from "../../../client/components/post-form";
 import React from "react";
+import {gql} from "apollo-server-core";
+import {useQuery} from "@apollo/react-hooks";
+import Alert from "../../../client/components/alert";
+import Layout from "../../../client/layouts/layout";
 
-export default function Edit({post}) {
-    return <PostForm post={post}/>
+export const GET_POST = gql`
+    query post($id: Int) {
+        post(id: $id) {
+            id
+            title
+            text
+            user {
+                login
+            }
+        }
+    }`;
+
+export default function Edit({id}) {
+    const {loading, error, data} = useQuery(GET_POST, {variables: {id}});
+    if (!loading && !error) {
+        const {post} = data;
+        return <PostForm post={post}/>
+    }
+    return (
+        <Layout>
+            {error ? <Alert message='Please refresh the page'/> : <b>Loading ...</b>}
+        </Layout>
+    )
 }
 
 export async function getServerSideProps({params}) {
-    const query = `
-        query {
-          post(id: ${params.id}) {
-                id
-                title
-                text
-          }
-        }
-    `;
-    const res = await axios.post(process.env.API_URL, {query});
-    const {post} = res.data.data;
+    const {id} = params;
     return {
         props: {
-            post
+            id: parseInt(id)
         }
     };
 }

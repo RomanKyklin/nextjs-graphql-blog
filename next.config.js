@@ -1,5 +1,4 @@
 const nextRuntimeDotenv = require('next-runtime-dotenv');
-
 const withConfig = nextRuntimeDotenv({
     // path: '.env',
     public: [
@@ -18,7 +17,7 @@ module.exports = withConfig({
         if (!isServer) {
             config.node = {
                 fs: 'empty'
-            }
+            };
         }
 
         return config

@@ -1,51 +1,51 @@
 import React, {useEffect, useState} from "react";
 import Layout from "../layouts/layout";
 import Link from "next/link";
-import axios from 'axios';
 import Router from "next/router";
 import Alert from "./alert";
 import PropTypes from 'prop-types';
-import getConfig from 'next/config';
+import {gql} from "apollo-server-core";
+import {useMutation} from "@apollo/react-hooks";
+
+export const CREATE_POST = gql`
+    mutation createPost($title:String, $text:String) {
+        createPost(title: $title, text: $text) {
+            id
+            title
+            text
+        }
+    }`;
+
+export const UPDATE_POST = gql`
+    mutation updatePost($id:Int, $title:String, $text:String) {
+        updatePost(id: $id, title: $title, text: $text) {
+            id
+            title
+            text
+        }
+    }`;
 
 const PostForm = ({post = null}) => {
-    const {
-        publicRuntimeConfig: {API_URL}
-    } = getConfig();
     const [title, setTitle] = useState(post ? post.title : '');
     const [text, setText] = useState(post ? post.text : '');
     const [error, setError] = useState(null);
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [createPost, {createPostData}] = useMutation(CREATE_POST);
+    const [updatePost, {updatePostData}] = useMutation(UPDATE_POST);
 
-    const onSubmit = event => {
+    const onSubmit = async event => {
         event.preventDefault();
-        const createPostQuery = `
-            query {
-              createPost(title:"${title}", text:"${text}") {
-                    id
-                    title
-                    text
-              }
-            }
-        `;
-
-        const updatePostQuery = ` 
-            query {
-              updatePost(id: ${post?.id}, title:"${title}", text:"${text}") {
-                    id
-                    title
-                    text
-              }
-            }
-        `;
 
         if (title && text) {
-            axios.post(API_URL, {
-                query: post ?
-                    updatePostQuery :
-                    createPostQuery
-            })
-                .then(() => setIsSubmitted(true))
-                .catch(err => setError(err))
+            try {
+                post ?
+                    await updatePost({variables: {id: post.id, title, text}}) :
+                    await createPost({variables: {title, text}});
+                setIsSubmitted(true);
+            } catch (e) {
+                console.error(e);
+                setError(e);
+            }
         }
     };
 
@@ -64,7 +64,7 @@ const PostForm = ({post = null}) => {
             /> : null}
             <div className="row justify-content-center">
                 <div className="col-md-12 text-center">
-                    <h2>Create new post</h2>
+                    {post ? <h2>Update post {post.id}</h2> : <h2>Create new post</h2>}
                 </div>
                 <div className="col-md-6">
                     <form onSubmit={onSubmit}>

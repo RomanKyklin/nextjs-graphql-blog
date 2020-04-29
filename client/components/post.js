@@ -1,33 +1,27 @@
 import Link from "next/link";
-import axios from "axios";
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import Alert from "./alert";
 import Router from "next/router";
 import PropTypes from 'prop-types';
-import getConfig from "next/config";
+import {gql} from "apollo-server-core";
+import {useMutation} from "@apollo/react-hooks";
 
-const {
-    publicRuntimeConfig: {API_URL}
-} = getConfig();
+export const DELETE_POST = gql`
+    mutation deletePost($id:Int) {
+        deletePost(id: $id) {
+            status
+        }
+    }
+`;
 
 const Post = ({post}) => {
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [error, setError] = useState(null);
-    const query = `
-       query {
-          deletePost(id: ${post.id}) {
-                id
-                title
-                text
-          }
-       }
-    `;
+    const [deletePost, {data}] = useMutation(DELETE_POST);
 
-    const onDeletePost = () => {
-        axios.post(API_URL, {query})
-            .then(() => setIsSubmitted(true))
-            .catch(setError)
-    };
+    const onDeletePost = () => deletePost({variables: {id: post.id}})
+        .then(() => setIsSubmitted(true))
+        .catch(setError);
 
     useEffect(() => {
         if (isSubmitted) {

@@ -1,38 +1,32 @@
 import React, {useState} from "react";
-import axios from 'axios';
 import Alert from "./alert";
-import getConfig from "next/config";
+import {useMutation} from '@apollo/react-hooks';
+import {gql} from "apollo-server-core";
 
-const {
-    publicRuntimeConfig: {API_URL}
-} = getConfig();
+
+export const CREATE_USER = gql`
+    mutation createUser($login: String, $password: String) {
+        createUser(login: $login, password: $password) {
+            id
+            login
+            password
+        }
+    }
+`;
 
 export default function LoginForm() {
     const [login, setLogin] = useState('');
     const [password, setPassword] = useState('');
-    const [error, setError] = useState(null);
-    const [isSubmitted, setIsSubmitted] = useState(false);
-    const query = `
-         query {
-            createUser(login: "${login}", password: "${password}") {
-                    id
-                    login
-                    password
-             }
-        }
-    `;
+    const [createUser, {data}] = useMutation(CREATE_USER);
 
     const onCreateUser = () => {
         if (login && password) {
-            axios.post(API_URL, {query})
-                .then(() => setIsSubmitted(true))
-                .catch(setError);
+            createUser({variables: {login, password}});
         }
     };
 
     return (
         <>
-            {error ? <Alert size='col-md-6' message='Please refresh page' type='alert-danger'/> : null}
             <div className='row justify-content-center'>
                 <div className="col-md-12 text-center">
                     <h2>Login form</h2>
